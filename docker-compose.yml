@@ -9,7 +9,7 @@ services:
       command        :
         - "agent"
         - "-server"
-        - "-bootstrap"
+        - "-bootstrap-expect=1"
         - "-data-dir=/tmp/consul"
         - "-ui"
         - "-client=0.0.0.0"
@@ -39,6 +39,15 @@ services:
       networks       : [ micronet ]
       links          : [ consul-bootstrap ]
 
+  
+    flask-server:
+      build         : .
+      container_name: flask-server
+      working_dir   : /usr/local/app/consul-docker-test
+      entrypoint    : ""
+      command       : [ "python", "-m", "flask_server.server" ]
+      networks      : [ micronet ]
+      links         : [ consul-bootstrap ]
 
     # consul-members:
     #   restart        : always
