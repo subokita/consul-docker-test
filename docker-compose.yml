@@ -3,6 +3,7 @@ networks:
     micronet:
 
 services:
+    # Consul
     consul-bootstrap:
       image          : consul
       container_name : consul-bootstrap
@@ -29,7 +30,6 @@ services:
       command        :
         - "agent"
         - "-server"
-        - "-bootstrap"
         - "-data-dir=/tmp/consul"
         - "-client=0.0.0.0"
         - "-node=server-node-1"
@@ -38,16 +38,46 @@ services:
       volumes        : [ "./tmp/consul-server-1:/tmp/consul" ]
       networks       : [ micronet ]
       links          : [ consul-bootstrap ]
-
   
-    flask-server:
+    # Registrator
+    # registrator:
+    #   restart: always
+    #   image: gliderlabs/registrator
+    #   container_name: registrator
+    #   command:
+    #     - "consul://0.0.0.0:8500"
+    #   volumes        : [ "./tmp/registrator/docker.sock:/tmp/docker.sock" ]
+    #   networks       : [ micronet ]
+    #   links          : [ consul-bootstrap ]
+    #   depends_on     : [ consul-bootstrap ]
+  
+    # Flask services
+    flask-server-1:
       build         : .
-      container_name: flask-server
+      container_name: flask-server-1
       working_dir   : /usr/local/app/consul-docker-test
       entrypoint    : ""
-      command       : [ "python", "-m", "flask_server.server" ]
+      command       : [ "python", "-m", "flask-server.server" ]
       networks      : [ micronet ]
       links         : [ consul-bootstrap ]
+      environment   :
+        - CONSUL_AGENT_ADDR=consul-bootstrap
+        - CONSUL_AGENT_PORT=8500
+        - CONSUL_SERVICE_NAME=flask-server-1
+
+
+    flask-server-2:
+      build         : .
+      container_name: flask-server-2
+      working_dir   : /usr/local/app/consul-docker-test
+      entrypoint    : ""
+      command       : [ "python", "-m", "flask-server.server" ]
+      networks      : [ micronet ]
+      links         : [ consul-server-1 ]
+      environment   :
+        - CONSUL_AGENT_ADDR=consul-server-1
+        - CONSUL_AGENT_PORT=8500
+        - CONSUL_SERVICE_NAME=flask-server-2
 
     # consul-members:
     #   restart        : always
