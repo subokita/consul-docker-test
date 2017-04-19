@@ -3,16 +3,17 @@ networks:
     micronet:
 
 services:
-    # Consul
+    ## Consul
     consul-bootstrap:
       image          : consul
       container_name : consul-bootstrap
       command        :
         - "agent"
         - "-server"
-        - "-bootstrap-expect=1"
-        - "-data-dir=/tmp/consul"
+        - "-bootstrap"
         - "-ui"
+        - "-data-dir=/tmp"
+        - "-advertise=${DOCKER_MACHINE_IP}"
         - "-client=0.0.0.0"
         - "-node=bootstrap-node"
         - "-node-id=102b597f-0b4c-4702-985e-327a5a022cc7"
@@ -24,32 +25,28 @@ services:
         - "8600:8600/udp"
 
 
-    consul-server-1:
-      image          : consul
-      container_name : consul-server-1
-      command        :
-        - "agent"
-        - "-server"
-        - "-data-dir=/tmp/consul"
-        - "-client=0.0.0.0"
-        - "-node=server-node-1"
-        - "-node-id=3d6ae904-21bc-4322-adde-6ff1ac22a68a" # uuidgen | uuidgen | awk '{print tolower(zsh)}'
-        - "-join=consul-bootstrap"
-      volumes        : [ "./tmp/consul-server-1:/tmp/consul" ]
-      networks       : [ micronet ]
-      links          : [ consul-bootstrap ]
-  
-    # Registrator
-    # registrator:
-    #   restart: always
-    #   image: gliderlabs/registrator
-    #   container_name: registrator
-    #   command:
-    #     - "consul://0.0.0.0:8500"
-    #   volumes        : [ "./tmp/registrator/docker.sock:/tmp/docker.sock" ]
+    # consul-server-1:
+    #   image          : consul
+    #   container_name : consul-server-1
+    #   command        :
+    #     - "agent"
+    #     - "-server"
+    #     - "-client=0.0.0.0"
+    #     - "-node=server-node-1"
+    #     - "-node-id=3d6ae904-21bc-4322-adde-6ff1ac22a68a" # uuidgen | uuidgen | awk '{print tolower(zsh)}'
+    #     - "-join=consul-bootstrap"
+    #   volumes        : [ "./tmp/consul-server-1:/tmp/consul" ]
     #   networks       : [ micronet ]
     #   links          : [ consul-bootstrap ]
-    #   depends_on     : [ consul-bootstrap ]
+  
+    # Registrator
+    registrator:
+      image         : gliderlabs/registrator
+      container_name: registrator
+      command       : ["-ip", "${DOCKER_MACHINE_IP}", "consul://consul-bootstrap:8500"]
+      volumes       : [ "/var/run/docker.sock:/tmp/docker.sock" ]
+      networks      : [ micronet ]
+      depends_on    : [ consul-bootstrap ]
   
     # Flask services
     flask-server-1:
@@ -60,24 +57,22 @@ services:
       command       : [ "python", "-m", "flask-server.server" ]
       networks      : [ micronet ]
       links         : [ consul-bootstrap ]
-      environment   :
-        - CONSUL_AGENT_ADDR=consul-bootstrap
-        - CONSUL_AGENT_PORT=8500
-        - CONSUL_SERVICE_NAME=flask-server-1
-
-
-    flask-server-2:
-      build         : .
-      container_name: flask-server-2
-      working_dir   : /usr/local/app/consul-docker-test
-      entrypoint    : ""
-      command       : [ "python", "-m", "flask-server.server" ]
-      networks      : [ micronet ]
-      links         : [ consul-server-1 ]
-      environment   :
-        - CONSUL_AGENT_ADDR=consul-server-1
-        - CONSUL_AGENT_PORT=8500
-        - CONSUL_SERVICE_NAME=flask-server-2
+      ports:
+        - "80:80"
+      depends_on    : [ registrator ]
+    
+    # flask-server-2:
+    #   build         : .
+    #   container_name: flask-server-2
+    #   working_dir   : /usr/local/app/consul-docker-test
+    #   entrypoint    : ""
+    #   command       : [ "python", "-m", "flask-server.server" ]
+    #   networks      : [ micronet ]
+    #   links         : [ consul-server-1 ]
+    #   environment   :
+    #     - CONSUL_AGENT_ADDR=consul-server-1
+    #     - CONSUL_AGENT_PORT=8500
+    #     - CONSUL_SERVICE_NAME=flask-server-2
 
     # consul-members:
     #   restart        : always
