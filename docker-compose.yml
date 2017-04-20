@@ -56,12 +56,11 @@ services:
       entrypoint    : ""
       command       : [ "python", "-m", "flask-server.server" ]
       networks      : [ micronet ]
-      links         : [ consul-bootstrap ]
-      environment:
-        - SERVICE_NAME=flask-server-1
+      depends_on    : [ registrator ]
       ports:
         - "80:80"
-      depends_on    : [ registrator ]
+      environment:
+        - SERVICE_NAME=flask-server-1
     
     # flask-server-2:
     #   build         : .
