@@ -57,3 +57,5 @@ services:
       ports         : [ "80" ]
       environment   :
         - SERVICE_NAME=call-server
+        - CONSUL_AGENT_ADDR=${DOCKER_MACHINE_IP}
+        - CONSUL_AGENT_PORT=8500
