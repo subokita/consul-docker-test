@@ -23,21 +23,6 @@ services:
         - "8400:8400"
         - "8500:8500"
         - "8600:8600/udp"
-
-
-    # consul-server-1:
-    #   image          : consul
-    #   container_name : consul-server-1
-    #   command        :
-    #     - "agent"
-    #     - "-server"
-    #     - "-client=0.0.0.0"
-    #     - "-node=server-node-1"
-    #     - "-node-id=3d6ae904-21bc-4322-adde-6ff1ac22a68a" # uuidgen | uuidgen | awk '{print tolower(zsh)}'
-    #     - "-join=consul-bootstrap"
-    #   volumes        : [ "./tmp/consul-server-1:/tmp/consul" ]
-    #   networks       : [ micronet ]
-    #   links          : [ consul-bootstrap ]
   
     # Registrator
     registrator:
@@ -49,37 +34,26 @@ services:
       depends_on    : [ consul-bootstrap ]
   
     # Flask services
-    flask-server-1:
+    hello-server:
       build         : .
-      container_name: flask-server-1
+      container_name: hello-server
       working_dir   : /usr/local/app/consul-docker-test
       entrypoint    : ""
-      command       : [ "python", "-m", "flask-server.server" ]
+      command       : [ "python", "-m", "flask-server.hello-server" ]
       networks      : [ micronet ]
       depends_on    : [ registrator ]
-      ports:
-        - "80:80"
-      environment:
-        - SERVICE_NAME=flask-server-1
-    
-    # flask-server-2:
-    #   build         : .
-    #   container_name: flask-server-2
-    #   working_dir   : /usr/local/app/consul-docker-test
-    #   entrypoint    : ""
-    #   command       : [ "python", "-m", "flask-server.server" ]
-    #   networks      : [ micronet ]
-    #   links         : [ consul-server-1 ]
-    #   environment   :
-    #     - CONSUL_AGENT_ADDR=consul-server-1
-    #     - CONSUL_AGENT_PORT=8500
-    #     - CONSUL_SERVICE_NAME=flask-server-2
+      ports         : [ "80" ]
+      environment   :
+        - SERVICE_NAME=hello-server
 
-    # consul-members:
-    #   restart        : always
-    #   image          : consul
-    #   container_name : consul-members
-    #   command        : [ "members", "-http-addr=consul-bootstrap:8500"]
-    #   networks       : [ micronet ]
-    #   depends_on     : [ consul-bootstrap ]
-    #   links          : [ consul-bootstrap ]
+    call-server:
+      build         : .
+      container_name: call-server
+      working_dir   : /usr/local/app/consul-docker-test
+      entrypoint    : ""
+      command       : [ "python", "-m", "flask-server.call-server" ]
+      networks      : [ micronet ]
+      depends_on    : [ registrator ]
+      ports         : [ "80" ]
+      environment   :
+        - SERVICE_NAME=call-server
