@@ -57,6 +57,8 @@ services:
       command       : [ "python", "-m", "flask-server.server" ]
       networks      : [ micronet ]
       links         : [ consul-bootstrap ]
+      environment:
+        - SERVICE_NAME=flask-server-1
       ports:
         - "80:80"
       depends_on    : [ registrator ]
