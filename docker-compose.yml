@@ -13,7 +13,8 @@ services:
         - "-bootstrap"
         - "-ui"
         - "-data-dir=/tmp"
-        - "-advertise=${DOCKER_MACHINE_IP}"
+        - "-advertise=${DOCKER_MACHINE_IP}" # Advertise using host environment variable ${DOCKER_MACHINE_IP}
+                                            # so that we could do `curl $(docker-machine ip):8500/v1/catalog/services`
         - "-client=0.0.0.0"
         - "-node=bootstrap-node"
         - "-node-id=102b597f-0b4c-4702-985e-327a5a022cc7"
@@ -46,12 +47,15 @@ services:
       environment   :
         - SERVICE_NAME=hello-server
 
+    # Our call-server that will use consul to discover hello-server and perform REST request to 
+    # hello-server
     call-server:
       build         : .
       container_name: call-server
       working_dir   : /usr/local/app/consul-docker-test
       entrypoint    : ""
       command       : [ "python", "-m", "flask-server.call-server" ]
+      volumes       : [ "./flask-server:/usr/local/app/consul-docker-test/flask-server" ] # So that changes in host dir, will trigger reload in container
       networks      : [ micronet ]
       depends_on    : [ registrator ]
       ports         : [ "80" ]
