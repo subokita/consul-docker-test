@@ -1,4 +1,4 @@
-{{range services}}{{if .Tags | contains "microservice" }}
+{{range services}}{{if .Tags.Contains "microservice" }}
 upstream {{.Name}}{
     least_conn;{{range service .Name}}
     server {{.Address}}:{{.Port}};{{end}}
