@@ -26,8 +26,10 @@ services:
         - "-client=0.0.0.0"
         - "-node=bootstrap-node"
         - "-node-id=102b597f-0b4c-4702-985e-327a5a022cc7"
-      volumes        : [ "./tmp/consul-bootstrap:/tmp/consul" ]
+      volumes        : [ "./.tmp/consul-bootstrap:/tmp/consul" ]
       networks       : [ micronet ]
+      environment   :
+        - SERVICE_IGNORE=always
       ports          :
         - "8400:8400"
         - "8500:8500"
@@ -56,6 +58,7 @@ services:
       ports         : [ "5000" ]
       environment   :
         - SERVICE_NAME=hello-server
+        - SERVICE_TAGS=microservice
         - CONSUL_AGENT_ADDR=${DOCKER_MACHINE_IP}
         - CONSUL_AGENT_PORT=8500
       depends_on    : [ registrator ]
@@ -74,6 +77,7 @@ services:
       ports         : [ "5000" ]
       environment   :
         - SERVICE_NAME=call-server
+        - SERVICE_TAGS=microservice
         - CONSUL_AGENT_ADDR=${DOCKER_MACHINE_IP}
         - CONSUL_AGENT_PORT=8500
       depends_on    : [ registrator ]
