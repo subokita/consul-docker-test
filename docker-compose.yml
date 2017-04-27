@@ -3,7 +3,15 @@ networks:
     micronet:
 
 services:
-    ## Consul
+
+    # nginx-service:
+    #     build: ./nginx/
+    #     container_name: ppo-nginx
+    #     networks: [ micronet ]
+    #     ports: 
+    #         - "80:80"
+
+    # Consul
     consul-bootstrap:
       image          : consul
       container_name : consul-bootstrap
@@ -25,6 +33,7 @@ services:
         - "8500:8500"
         - "8600:8600/udp"
   
+
     # Registrator
     registrator:
       image         : gliderlabs/registrator
@@ -39,33 +48,45 @@ services:
       build         : .
       container_name: hello-server
       working_dir   : /usr/local/app/consul-docker-test
-      entrypoint    : ""
-      command       : [ "python", "-m", "flask-server.hello-server" ]
-      volumes       : [ "./flask-server:/usr/local/app/consul-docker-test/flask-server" ] # So that changes in host dir, will trigger reload in container
-      dns: [ "$DOCKER_MACHINE_IP" ]
-      dns_search: [ "service.consul" ]
+      volumes       : 
+        - "./flask-server:/usr/local/app/consul-docker-test/flask-server"
+        - "./uwsgi:/usr/local/app/consul-docker-test/uwsgi"
+      command       : [ "uwsgi", "--ini", "uwsgi/uwsgi.ini:hello-server" ]
       networks      : [ micronet ]
-      ports         : [ "80" ]
+      ports         : [ "5000" ]
       environment   :
         - SERVICE_NAME=hello-server
         - CONSUL_AGENT_ADDR=${DOCKER_MACHINE_IP}
         - CONSUL_AGENT_PORT=8500
       depends_on    : [ registrator ]
 
+
     # Our call-server that will use consul to discover hello-server and perform REST request to  hello-server    
     call-server:
       build         : .
       container_name: call-server
       working_dir   : /usr/local/app/consul-docker-test
-      entrypoint    : ""
-      command       : [ "python", "-m", "flask-server.call-server" ]
-      volumes       : [ "./flask-server:/usr/local/app/consul-docker-test/flask-server" ] # So that changes in host dir, will trigger reload in container
-      dns: [ "$DOCKER_MACHINE_IP" ]
-      dns_search: [ "service.consul" ]
+      volumes       : 
+        - "./flask-server:/usr/local/app/consul-docker-test/flask-server"
+        - "./uwsgi:/usr/local/app/consul-docker-test/uwsgi"
+      command       : [ "uwsgi", "--ini", "uwsgi/uwsgi.ini:call-server" ]
       networks      : [ micronet ]
-      ports         : [ "80" ]
+      ports         : [ "5000" ]
       environment   :
         - SERVICE_NAME=call-server
         - CONSUL_AGENT_ADDR=${DOCKER_MACHINE_IP}
         - CONSUL_AGENT_PORT=8500
       depends_on    : [ registrator ]
+
+    
+    # pinger:
+    #   build         : 
+    #     context   : .
+    #     dockerfile: pinger-Dockerfile
+    #   container_name: pinger
+    #   networks      : [ micronet ]
+    #   links         : [ consul-bootstrap ]
+    #   dns           : ["$DOCKER_MACHINE_IP"]
+    #   dns_search    : [ "service.consul" ]
+    #   # command: ["cat", "/etc/resolv.conf"]
+    #   command       : ["curl", "-s", "consul-bootstrap:8500/v1/catalog/service/hello-server" ]

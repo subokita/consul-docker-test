@@ -1,0 +1,9 @@
+; http://stackoverflow.com/questions/34099031/nginx-consul-template-in-docker
+
+{{range services}}
+    upstream {{.Name}}{
+        least_conn;{{range service .Name}}
+        server {{.Address}}:{{.Port}};{{end}}
+    }
+{{end}}
+

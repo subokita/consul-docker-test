@@ -9,4 +9,5 @@ pyparsing==2.2.0
 python-consul==0.7.0
 requests==2.13.0
 six==1.10.0
+uWSGI==2.0.15
 Werkzeug==0.12.1
