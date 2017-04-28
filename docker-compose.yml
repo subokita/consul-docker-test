@@ -7,7 +7,7 @@ services:
     nginx-service:
         restart       : always
         build         : ./nginx/
-        container_name: ppo-nginx
+        container_name: nginx-template-test
         networks      : [ micronet ]
         working_dir   : /usr/local/app/nginx-consul-template/
         volumes       : 
