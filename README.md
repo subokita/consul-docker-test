@@ -1,4 +1,16 @@
 # consul-docker-test
+
+## Explanations
+This sample project contains many different components, namely:
+- **Docker**: for containerizing services
+- **Flask**: Python framework to quickly create REST services
+- **uWSGI**: Python framework to support WSGI (Web Server Gateway Interface)
+- **Consul**: Automated service discovery
+- **Registrator**: Automatically listen to expose port of each running docker container, and register it as a consul-service
+- **NGINX**: A HTTP and Reverse Proxy server
+- **Consul-Template**: A templating tool that checks consul server periodically and use the information to generate configurations (e.g. nginx configurations)
+
+## How to run
 Testing running consul in docker in OS X.
 
 Just me trying to understand how consul works within docker within OSX. 
