@@ -47,3 +47,9 @@ curl -s $(docker-machine ip):32777
 {"CreateIndex": 384, "ServicePort": 32776, "ServiceTags": [], "ModifyIndex": 384, "ServiceEnableTagOverride": false, "Node": "bootstrap-node", "ID": "102b597f-0b4c-4702-985e-327a5a022cc7", "NodeMeta": {}, "TaggedAddresses": {"wan": "192.168.99.100", "lan": "192.168.99.100"}, "Address": "192.168.99.100", "ServiceName": "hello-server", "ServiceID": "ab1720162e4c:hello-server:80", "ServiceAddress": "192.168.99.100"} Hello World
 
 ```
+
+We're using Consul-Template + NGINX to do reverse proxy and automatic load balancing, thus now the hello-server and call-server services can be accessed from:
+```
+curl -s $(docker-machine ip)/api/hello-server
+curl -s $(docker-machine ip)/api/call-server
+```
