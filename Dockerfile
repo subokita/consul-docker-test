@@ -9,7 +9,7 @@ RUN         apt-get update \
 
             &&  rm -rf /var/lib/apt/lists/* \
             &&  apt-get purge -y \
-                build-essential 
+                build-essential
 
 ENV         PYTHONPATH=/usr/local/app
 COPY        flask-server   /usr/local/app/consul-docker-test/flask-server

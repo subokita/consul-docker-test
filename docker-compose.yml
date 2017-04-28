@@ -4,12 +4,24 @@ networks:
 
 services:
 
-    # nginx-service:
-    #     build: ./nginx/
-    #     container_name: ppo-nginx
-    #     networks: [ micronet ]
-    #     ports: 
-    #         - "80:80"
+    nginx-service:
+        restart       : always
+        build         : ./nginx/
+        container_name: ppo-nginx
+        networks      : [ micronet ]
+        working_dir   : /usr/local/app/nginx-consul-template/
+        volumes       : 
+          - "./nginx/consul.ctmpl:/usr/local/app/nginx-consul-template/consul.ctmpl"
+          - "./nginx/nginx-template.sh:/usr/local/app/nginx-consul-template/nginx-template.sh"
+        environment:
+          - SERVICE_IGNORE=always
+          - CONSUL_AGENT_ADDR=${DOCKER_MACHINE_IP}
+          - CONSUL_AGENT_PORT=8500
+        ports         : 
+            - "80:80"
+        depends_on: [ call-server ]
+        command:    [ "./nginx-template.sh" ]
+        
 
     # Consul
     consul-bootstrap:
@@ -25,7 +37,6 @@ services:
                                             # so that we could do `curl $(docker-machine ip):8500/v1/catalog/services`
         - "-client=0.0.0.0"
         - "-node=bootstrap-node"
-        - "-node-id=102b597f-0b4c-4702-985e-327a5a022cc7"
       volumes        : [ "./.tmp/consul-bootstrap:/tmp/consul" ]
       networks       : [ micronet ]
       environment   :
@@ -55,7 +66,7 @@ services:
         - "./uwsgi:/usr/local/app/consul-docker-test/uwsgi"
       command       : [ "uwsgi", "--ini", "uwsgi/uwsgi.ini:hello-server" ]
       networks      : [ micronet ]
-      ports         : [ "5000" ]
+      ports         : [ "5000:5000" ]
       environment   :
         - SERVICE_NAME=hello-server
         - SERVICE_TAGS=microservice
